@@ -538,6 +538,63 @@ RegisterNetEvent("qb-admin:client:ToggleDevmode", function()
     dev = not dev
 end)
 
+RegisterNetEvent('hud:client:BuffEffect', function(data)
+    print("Going to send buff efffect")
+    if data.progressColor ~= nil then
+        print("Sending start of buff")
+        SendNUIMessage({
+            action = "externalstatus",
+            topic = "buff",
+            display = data.display,
+            iconColor = data.iconColor,
+            iconName = data.iconName,
+            buffName = data.buffName,
+            progressValue = data.progressValue,
+            progressColor = data.progressColor,
+        })
+    elseif data.progressValue ~= nil then
+        print("Sending progress of buff", data.progressValue)
+        SendNUIMessage({
+            action = "externalstatus",
+            topic = "buff",
+            buffName = data.buffName,
+            progressValue = data.progressValue,
+        })
+    elseif data.display ~= nil then
+        print("Sending ending of buff", data.display)
+        SendNUIMessage({
+            action = "externalstatus",
+            topic = "buff",
+            buffName = data.buffName,
+            display = data.display,
+        })
+    else
+        print("QB-Hud error: data invalid from client event call: hud:client:BuffEffect")
+    end
+end)
+
+RegisterNetEvent('hud:client:EnhancementEffect', function(data)
+    print('Going to send enhancement efffect')
+    if data.iconColor ~= nil then
+        SendNUIMessage({
+            action = "externalstatus",
+            topic = "enhancement",
+            display = data.display,
+            iconColor = data.iconColor,
+            enhancementName = data.enhancementName,
+        })
+    elseif data.display ~= nil then
+        SendNUIMessage({
+            action = "externalstatus",
+            topic = "enhancement",
+            display = data.display,
+            enhancementName = data.enhancementName,
+        })
+    else
+        print("QB-hud error: data invalid from client event call: hud:client:EnhancementEffect")
+    end
+end)
+
 RegisterCommand('+engine', function()
     local vehicle = GetVehiclePedIsIn(PlayerPedId(), false)
     if vehicle == 0 or GetPedInVehicleSeat(vehicle, -1) ~= PlayerPedId() then return end

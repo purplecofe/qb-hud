@@ -776,6 +776,8 @@ const playerHud = {
       hungerColor: "",
       healthColor: "",
       thirstColor: "",
+      buffs: {},
+      enhancements: {},
     };
   },
   
@@ -784,16 +786,59 @@ const playerHud = {
   },
   mounted() {
     this.listener = window.addEventListener("message", (event) => {
-      if (event.data.action === "hudtick") {
-        this.hudTick(event.data);
-      } 
-      // else if(event.data.update) {
-      //   eval(event.data.action + "(" + event.data.show + ')')
-      // }
+      switch (event.data.action) {
+        case "hudtick":
+          this.hudTick(event.data);
+          break;
+        case "externalstatus":
+          console.log("Got Message:!", event.data)
+          switch (event.data.topic) {
+            case "buff":
+              this.handleBuffs(event.data);
+              break;
+            case "enhancement":
+              this.handleEnhancements(event.data);
+              break;
+          }
+          break;
+      }
     });
     Config = {};
   },
   methods: {
+    handleBuffs(data) {
+      console.log("Handling data:", data);
+      const name = data.buffName;
+
+      if (!this.buffs[name]) {
+        this.buffs[name] = {
+          iconColor: data.iconColor,
+          iconName: data.iconName,
+          name: data.buffName,
+          progressValue: data.progressValue,
+          progressColor: data.progressColor
+        };
+        return;
+      }
+
+      if (!isNaN(data.progressValue) && data.progressValue >= 0) {
+        this.buffs[name].progressValue = data.progressValue;
+      } else if (data.display != null && data.display != undefined && !data.display) {
+        this.buffs = delete this.buffs[name] && this.buffs;
+      } else {
+        console.error("QB-Buffs error: Buff State Message malformed!");
+      }
+    },
+    handleEnhancements(data) {
+      const name = data.enhancementName;
+      const playerIconName = name.replace('super-','');
+
+      if (!this.enhancements[playerIconName]) {
+        this.enhancements[playerIconName] = data.iconColor;
+      } else {
+        this.enhancements = delete this.enhancements[playerIconName] && this.enhancements;
+      }
+    },
     hudTick(data) {
       this.show = data.show;
       this.health = data.health;
