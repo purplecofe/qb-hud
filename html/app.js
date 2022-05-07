@@ -791,7 +791,6 @@ const playerHud = {
           this.hudTick(event.data);
           break;
         case "externalstatus":
-          console.log("Got Message:!", event.data)
           switch (event.data.topic) {
             case "buff":
               this.handleBuffs(event.data);
@@ -799,18 +798,19 @@ const playerHud = {
             case "enhancement":
               this.handleEnhancements(event.data);
               break;
+            case "startup":
+              this.handleBuffsStartup(event.data);
+              break;
           }
           break;
       }
     });
-    Config = {};
   },
   methods: {
     handleBuffs(data) {
-      console.log("Handling data:", data);
       const name = data.buffName;
 
-      if (!this.buffs[name]) {
+      if (data.iconColor) {
         this.buffs[name] = {
           iconColor: data.iconColor,
           iconName: data.iconName,
@@ -822,7 +822,9 @@ const playerHud = {
       }
 
       if (!isNaN(data.progressValue) && data.progressValue >= 0) {
-        this.buffs[name].progressValue = data.progressValue;
+        if (this.buffs[name]) {
+          this.buffs[name].progressValue = data.progressValue;
+        }
       } else if (data.display != null && data.display != undefined && !data.display) {
         this.buffs = delete this.buffs[name] && this.buffs;
       } else {
@@ -838,6 +840,16 @@ const playerHud = {
       } else {
         this.enhancements = delete this.enhancements[playerIconName] && this.enhancements;
       }
+    },
+    // When a player logs in with active buffs
+    handleBuffsStartup(data) {
+      for (const status of Object.values(data.statuses)) {
+        if (status.buffName) {
+          this.handleBuffs(status);
+        } else {
+          this.handleEnhancements(status);
+        }
+       }
     },
     hudTick(data) {
       this.show = data.show;

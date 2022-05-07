@@ -74,11 +74,25 @@ local function saveSettings()
     SetResourceKvp('hudSettings', json.encode(Menu))
 end
 
+local function sendBuffNUIData()
+    -- Get player buffs nui info if they have buffs
+    local buffNUIData = exports['tnj-buffs']:GetBuffNUIData()
+    if buffNUIData then
+        SendNUIMessage({
+            action = "externalstatus",
+            topic = "startup",
+            statuses = buffNUIData,
+        })
+    end
+end
+
 RegisterNetEvent("QBCore:Client:OnPlayerLoaded", function()
     Wait(2000)
     local hudSettings = GetResourceKvpString('hudSettings')
     if hudSettings then loadSettings(json.decode(hudSettings)) end
     PlayerData = QBCore.Functions.GetPlayerData()
+
+    sendBuffNUIData()
 end)
 
 RegisterNetEvent("QBCore:Client:OnPlayerUnload", function()
@@ -94,6 +108,8 @@ AddEventHandler('onResourceStart', function(resourceName)
     Wait(2000)
     local hudSettings = GetResourceKvpString('hudSettings')
     if hudSettings then loadSettings(json.decode(hudSettings)) end
+
+    sendBuffNUIData()
 end)
 
 -- Callbacks & Events
@@ -126,6 +142,7 @@ local function restartHud()
     end
     Wait(2600)
     SendNUIMessage({ action = 'hudtick', show = false })
+    sendBuffNUIData()
     SendNUIMessage({ action = 'hudtick', show = true })
     Wait(2600)
     QBCore.Functions.Notify(Lang:t("notify.hud_start"), "success")
@@ -539,9 +556,7 @@ RegisterNetEvent("qb-admin:client:ToggleDevmode", function()
 end)
 
 RegisterNetEvent('hud:client:BuffEffect', function(data)
-    print("Going to send buff efffect")
     if data.progressColor ~= nil then
-        print("Sending start of buff")
         SendNUIMessage({
             action = "externalstatus",
             topic = "buff",
@@ -553,7 +568,6 @@ RegisterNetEvent('hud:client:BuffEffect', function(data)
             progressColor = data.progressColor,
         })
     elseif data.progressValue ~= nil then
-        print("Sending progress of buff", data.progressValue)
         SendNUIMessage({
             action = "externalstatus",
             topic = "buff",
@@ -561,7 +575,6 @@ RegisterNetEvent('hud:client:BuffEffect', function(data)
             progressValue = data.progressValue,
         })
     elseif data.display ~= nil then
-        print("Sending ending of buff", data.display)
         SendNUIMessage({
             action = "externalstatus",
             topic = "buff",
@@ -574,7 +587,6 @@ RegisterNetEvent('hud:client:BuffEffect', function(data)
 end)
 
 RegisterNetEvent('hud:client:EnhancementEffect', function(data)
-    print('Going to send enhancement efffect')
     if data.iconColor ~= nil then
         SendNUIMessage({
             action = "externalstatus",
@@ -591,7 +603,7 @@ RegisterNetEvent('hud:client:EnhancementEffect', function(data)
             enhancementName = data.enhancementName,
         })
     else
-        print("QB-hud error: data invalid from client event call: hud:client:EnhancementEffect")
+        print("QB-Hud error: data invalid from client event call: hud:client:EnhancementEffect")
     end
 end)
 
